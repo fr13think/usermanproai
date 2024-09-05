@@ -10,7 +10,7 @@ class GroqClient:
         groq_api_key = st.secrets["GROQ_API_KEY"]
         if not groq_api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
-        self.client = groq.Client(api_key=groq_api_key)  # Ensure this is the correct class
+        self.client = groq.Groq(api_key=groq_api_key)  # Ensure this is the correct class
 
     @retry(stop=stop_after_attempt(3), wait=wait_random_exponential(min=1, max=60))
     def generate_prompt(self) -> str:
