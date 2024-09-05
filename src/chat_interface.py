@@ -40,34 +40,93 @@ class ChatInterface:
         assistant = st.session_state.assistants[st.session_state.current_assistant]
         st.header(f"Chat with {assistant['name']}")
 
-        # Container for chat messages
+        # Custom CSS to create a fixed footer
+        st.markdown("""
+        <style>
+        .stApp {
+            margin-bottom: 80px;
+        }
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 20px;
+            z-index: 999;
+            border-top: 1px solid #e6e6e6;
+        }
+        .chat-container {
+            height: calc(100vh - 200px);
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Main chat container
         chat_container = st.container()
+        
+        # Fixed bottom container for user input
+        bottom_container = st.container()
+
         with chat_container:
+            st.markdown('<div class="chat-container">', unsafe_allow_html=True)
             for message in assistant["chat_history"]:
                 with st.chat_message(message["role"]):
                     st.write(format_message(message["content"]))
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # User input
-        try:
-            user_input = st.chat_input("Type your message here...")
-        except Exception as e:
-            st.error(f"Error with chat input: {str(e)}")
-            user_input = None
+        with bottom_container:
+            st.markdown('<div class="fixed-bottom">', unsafe_allow_html=True)
+            try:
+                user_input = st.chat_input("Type your message here...")
+            except Exception as e:
+                st.error(f"Error with chat input: {str(e)}")
+                user_input = None
+            
+            if user_input:
+                with chat_container:
+                    with st.chat_message("user"):
+                        st.write(user_input)
+                    with st.chat_message("assistant"):
+                        with st.spinner("Thinking..."):
+                            assistant_response = self.chat_with_assistant(user_input)
+                        st.write(format_message(assistant_response))
+                st.rerun()  # Force a rerun to update the chat container
+            
+            # Clear chat history button
+            if st.button("Clear Chat History"):
+                assistant["chat_history"] = []
+                self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, [])
+                st.session_state.assistants[st.session_state.current_assistant]["chat_history"] = []
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        if user_input:
-            with st.chat_message("user"):
-                st.write(user_input)
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    assistant_response = self.chat_with_assistant(user_input)
-                st.write(format_message(assistant_response))
+def create_or_select_assistant(assistant_manager: AssistantManager):
+    st.sidebar.title("Assistant Management")
 
-        # Clear chat history button
-        if st.button("Clear Chat History"):
-            assistant["chat_history"] = []
-            self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, [])
-            st.session_state.assistants[st.session_state.current_assistant]["chat_history"] = []
+    # Create new assistant
+    with st.sidebar.expander("Create New Assistant"):
+        new_assistant_name = st.text_input("Assistant Name")
+        new_assistant_prompt = st.text_area("Assistant Prompt")
+        if st.button("Create Assistant"):
+            if new_assistant_name and new_assistant_prompt:
+                assistant_manager.create_assistant(new_assistant_name, new_assistant_prompt)
+                st.success(f"Assistant '{new_assistant_name}' created successfully!")
+                st.rerun()
+            else:
+                st.error("Please provide both name and prompt for the new assistant.")
+
+    # Select existing assistant
+    assistant_names = list(st.session_state.assistants.keys())
+    if assistant_names:
+        selected_assistant = st.sidebar.selectbox("Select Assistant", assistant_names)
+        if selected_assistant != st.session_state.current_assistant:
+            st.session_state.current_assistant = selected_assistant
             st.rerun()
+    else:
+        st.sidebar.warning("No assistants available. Create one to start chatting!")
 
 def main():
     st.set_page_config(page_title="AI Assistant Chat", layout="wide")
@@ -80,11 +139,7 @@ def main():
     assistant_manager = AssistantManager()
     chat_interface = ChatInterface(assistant_manager)
 
-    st.sidebar.title("AI Assistant")
-
-    # Assistant selection or creation logic here
-    # ...
-
+    create_or_select_assistant(assistant_manager)
     chat_interface.render()
 
 if __name__ == "__main__":
