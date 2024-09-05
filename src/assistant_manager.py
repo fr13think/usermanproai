@@ -42,7 +42,7 @@ class AssistantManager:
         else:
             if st.sidebar.button("Generate Prompt"):
                 new_assistant_prompt = self.auto_generate_prompt()
-                st.sidebar.code(f"Generated Prompt: {new_assistant_prompt}", wrap_lines=True)
+                st.sidebar.code(f"{new_assistant_prompt}", wrap_lines=True)
         
         if st.sidebar.button("Create Assistant"):
             if self.create_assistant(new_assistant_name, new_assistant_prompt):
