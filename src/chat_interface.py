@@ -30,33 +30,16 @@ class ChatInterface:
         if st.session_state.current_assistant:
             assistant = st.session_state.assistants[st.session_state.current_assistant]
             st.header(f"Chat with {assistant['name']}")
-
             # Container for chat messages
             chat_container = st.container()
             with chat_container:
                 for message in assistant["chat_history"]:
                     with st.chat_message(message["role"]):
                         st.write(format_message(message["content"]))
-
             # Empty space to push the input box to the bottom
             st.empty()
-
             # Container for user input
             input_container = st.container()
-            input_container_style = """
-            <style>
-            .stTextInput {
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                padding: 1rem;
-                background-color: white;
-                border-top: 1px solid #e6e6e6;
-            }
-            </style>
-            """
-            st.markdown(input_container_style, unsafe_allow_html=True)
-
             with input_container:
                 user_input = st.chat_input("Type your message here...")
                 if user_input:
@@ -66,7 +49,6 @@ class ChatInterface:
                         with st.spinner("Thinking..."):
                             assistant_response = self.chat_with_assistant(user_input)
                         st.write(format_message(assistant_response))
-
             # Clear chat history button
             if st.button("Clear Chat History"):
                 assistant["chat_history"] = []
