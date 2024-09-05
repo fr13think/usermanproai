@@ -40,6 +40,13 @@ class ChatInterface:
         assistant = st.session_state.assistants[st.session_state.current_assistant]
         st.header(f"Chat with {assistant['name']}")
 
+        # Chat history display
+        chat_container = st.container()
+        with chat_container:
+            for message in assistant["chat_history"]:
+                with st.chat_message(message["role"]):
+                    st.write(format_message(message["content"]))
+
         # User input area
         user_input = st.text_input("Type your message here...")
         if st.button("Send"):
@@ -54,13 +61,6 @@ class ChatInterface:
             self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, [])
             st.session_state.assistants[st.session_state.current_assistant]["chat_history"] = []
             st.session_state.need_rerun = True
-
-        # Chat history display
-        chat_container = st.container()
-        with chat_container:
-            for message in assistant["chat_history"]:
-                with st.chat_message(message["role"]):
-                    st.write(format_message(message["content"]))
 
         # Check if we need to rerun the app
         if st.session_state.get('need_rerun', False):
