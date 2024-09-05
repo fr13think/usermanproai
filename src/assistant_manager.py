@@ -42,7 +42,7 @@ class AssistantManager:
         else:
             if st.sidebar.button("Generate Prompt"):
                 new_assistant_prompt = self.auto_generate_prompt()
-                st.sidebar.code(new_assistant_prompt, language="text")
+                st.sidebar.code(new_assistant_prompt, language="text", wrap_lines=True)
                 
                 # Add a button to copy the generated prompt
                 if st.sidebar.button("Copy to Clipboard"):
