@@ -21,12 +21,12 @@ class GroqClient:
     @retry(stop=stop_after_attempt(3), wait=wait_random_exponential(min=1, max=60))
     def generate_prompt(self) -> str:
         response = self.client.chat.completions.create(
-        model="llama3-groq-70b-8192-tool-use-preview",
-        messages=[
-            {"role": "system", "content": "You are an AI assistant that generates high-quality, helpful, and comprehensive prompts to create excellent AI assistants."},
-            {"role": "user", "content": "Generate a detailed and thoughtful prompt for a new AI assistant that can engage in meaningful conversations, provide valuable insights, and assist users with a wide range of tasks. The prompt should encourage the AI to be empathetic, knowledgeable, and focused on delivering the best possible user experience."}
-        ],
-        max_tokens=200
+            model="llama3-groq-70b-8192-tool-use-preview",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that generates prompts for AI assistants."},
+                {"role": "user", "content": "Generate a creative and useful prompt for a new AI assistant."}
+            ],
+            max_tokens=100
         )
         return response.choices[0].message.content
 
