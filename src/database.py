@@ -24,10 +24,13 @@ class Database:
 
     def add_created_at_column(self):
         cursor = self.conn.cursor()
-        cursor.execute('''
-            ALTER TABLE assistants ADD COLUMN created_at TIMESTAMP
-        ''')
-        self.conn.commit()
+        cursor.execute('PRAGMA table_info(assistants)')
+        columns = [column[1] for column in cursor.fetchall()]
+        if 'created_at' not in columns:
+            cursor.execute('''
+                ALTER TABLE assistants ADD COLUMN created_at TIMESTAMP
+            ''')
+            self.conn.commit()
 
     def update_created_at_column(self):
         cursor = self.conn.cursor()
