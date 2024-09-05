@@ -14,21 +14,16 @@ class ChatInterface:
             *assistant["chat_history"],
             {"role": "user", "content": message}
         ]
-
         assistant_response = self.assistant_manager.groq_client.chat(messages)
-
         # Check if the response contains a tool call and format it
         if "<tool_call>" in assistant_response:
             formatted_response = format_tool_call(assistant_response)
         else:
             formatted_response = assistant_response
-
         assistant["chat_history"].append({"role": "user", "content": message})
         assistant["chat_history"].append({"role": "assistant", "content": formatted_response})
-
         # Save the updated chat history to the database
         self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, assistant["chat_history"])
-
         return formatted_response
 
     def render(self):
@@ -38,7 +33,6 @@ class ChatInterface:
 
             # Container for chat messages
             chat_container = st.container()
-
             with chat_container:
                 for message in assistant["chat_history"]:
                     with st.chat_message(message["role"]):
@@ -49,13 +43,25 @@ class ChatInterface:
 
             # Container for user input
             input_container = st.container()
+            input_container_style = """
+            <style>
+            .stTextInput {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                padding: 1rem;
+                background-color: white;
+                border-top: 1px solid #e6e6e6;
+            }
+            </style>
+            """
+            st.markdown(input_container_style, unsafe_allow_html=True)
 
             with input_container:
                 user_input = st.chat_input("Type your message here...")
                 if user_input:
                     with st.chat_message("user"):
                         st.write(user_input)
-
                     with st.chat_message("assistant"):
                         with st.spinner("Thinking..."):
                             assistant_response = self.chat_with_assistant(user_input)
@@ -67,6 +73,5 @@ class ChatInterface:
                 self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, [])
                 st.session_state.assistants[st.session_state.current_assistant]["chat_history"] = []
                 st.rerun()
-
         else:
             st.info("Create or select an assistant to start chatting.")
