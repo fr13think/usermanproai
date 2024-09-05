@@ -1,40 +1,26 @@
 import streamlit as st
-import json
 from typing import List, Dict
 from .assistant_manager import AssistantManager
 from .utils import format_message
-
-def format_tool_call(response: str) -> str:
-    """
-    Format the tool call response to make it more readable.
-    """
-    try:
-        # Extract the JSON content from within the <tool_call> tags
-        start = response.index('<tool_call>') + len('<tool_call>')
-        end = response.index('</tool_call>')
-        tool_call_json = response[start:end].strip()
-        
-        # Parse the JSON content
-        tool_call_data = json.loads(tool_call_json)
-        
-        # Format the tool call data into a more readable string
-        formatted_response = f"Tool Call:\n"
-        formatted_response += f"  Name: {tool_call_data['name']}\n"
-        formatted_response += f"  Arguments:\n"
-        for key, value in tool_call_data['arguments'].items():
-            formatted_response += f"    {key}: {value}\n"
-        
-        return formatted_response
-    except (ValueError, json.JSONDecodeError, KeyError) as e:
-        # If there's any error in parsing, return the original response
-        return f"Error formatting tool call: {str(e)}\nOriginal response: {response}"
 
 class ChatInterface:
     def __init__(self, assistant_manager: AssistantManager):
         self.assistant_manager = assistant_manager
 
+    def is_within_scope(self, user_input: str, assistant_prompt: str) -> bool:
+        # Check if the user input is within the scope of the assistant's prompt
+        # This is a simple implementation and may need to be refined based on your specific requirements
+        prompt_keywords = set(assistant_prompt.lower().split())
+        input_keywords = set(user_input.lower().split())
+        common_keywords = prompt_keywords.intersection(input_keywords)
+        return len(common_keywords) > 0
+
     def chat_with_assistant(self, message: str) -> str:
         assistant = st.session_state.assistants[st.session_state.current_assistant]
+        
+        if not self.is_within_scope(message, assistant["prompt"]):
+            return "Maaf saya tidak dapat menjawab, diluar tugas saya."
+
         messages = [
             {"role": "system", "content": assistant["prompt"]},
             *assistant["chat_history"],
@@ -42,16 +28,11 @@ class ChatInterface:
         ]
         assistant_response = self.assistant_manager.groq_client.chat(messages)
         
-        if "<tool_call>" in assistant_response:
-            formatted_response = format_tool_call(assistant_response)
-        else:
-            formatted_response = assistant_response
-        
         assistant["chat_history"].append({"role": "user", "content": message})
-        assistant["chat_history"].append({"role": "assistant", "content": formatted_response})
+        assistant["chat_history"].append({"role": "assistant", "content": assistant_response})
         
         self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, assistant["chat_history"])
-        return formatted_response
+        return assistant_response
 
     def render(self):
         if 'current_assistant' not in st.session_state or 'assistants' not in st.session_state:
@@ -83,7 +64,7 @@ class ChatInterface:
 
         user_input = st.text_input("Type your message here...", key="user_input", on_change=send_message)
         st.button("Send", on_click=send_message)
-
+        
         # Clear chat history button
         if st.button("Clear Chat History"):
             assistant["chat_history"] = []
