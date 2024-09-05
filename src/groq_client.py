@@ -1,17 +1,23 @@
 import os
+import streamlit as st
 import groq
 from typing import List, Dict
-import streamlit as st
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 import json
 
 class GroqClient:
     def __init__(self):
         groq_api_key = st.secrets["GROQ_API_KEY"]
+        # print(dir(groq))
+        # client = Groq(
+        #     # This is the default and can be omitted
+        #     api_key=st.secrets["GROQ_API_KEY"],
+        # )
         if not groq_api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
-        self.client = groq.Groq(api_key=groq_api_key)  # Ensure this is the correct class
-
+        self.client = groq.Groq(api_key=groq_api_key)
+        
+    
     @retry(stop=stop_after_attempt(3), wait=wait_random_exponential(min=1, max=60))
     def generate_prompt(self) -> str:
         response = self.client.chat.completions.create(
