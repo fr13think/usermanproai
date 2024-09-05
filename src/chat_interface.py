@@ -1,8 +1,33 @@
 import streamlit as st
+import json
 from typing import List, Dict
 from .assistant_manager import AssistantManager
 from .utils import format_message
-from .groq_client import format_tool_call
+
+def format_tool_call(response: str) -> str:
+    """
+    Format the tool call response to make it more readable.
+    """
+    try:
+        # Extract the JSON content from within the <tool_call> tags
+        start = response.index('<tool_call>') + len('<tool_call>')
+        end = response.index('</tool_call>')
+        tool_call_json = response[start:end].strip()
+        
+        # Parse the JSON content
+        tool_call_data = json.loads(tool_call_json)
+        
+        # Format the tool call data into a more readable string
+        formatted_response = f"Tool Call:\n"
+        formatted_response += f"  Name: {tool_call_data['name']}\n"
+        formatted_response += f"  Arguments:\n"
+        for key, value in tool_call_data['arguments'].items():
+            formatted_response += f"    {key}: {value}\n"
+        
+        return formatted_response
+    except (ValueError, json.JSONDecodeError, KeyError) as e:
+        # If there's any error in parsing, return the original response
+        return f"Error formatting tool call: {str(e)}\nOriginal response: {response}"
 
 class ChatInterface:
     def __init__(self, assistant_manager: AssistantManager):
@@ -27,6 +52,8 @@ class ChatInterface:
         
         self.assistant_manager.db.update_chat_history(st.session_state.current_assistant, assistant["chat_history"])
         return formatted_response
+
+    def render(self):
 
     def render(self):
         if 'current_assistant' not in st.session_state or 'assistants' not in st.session_state:
