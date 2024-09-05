@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.express as px
 
 # Set page configuration at the very beginning
 st.set_page_config(page_title="UserManPro", page_icon="🤖", layout="wide")
@@ -21,6 +22,7 @@ def main():
 
     with col2:
         chat_interface.render()
+        assistant_manager.render_dashboard()
 
 if __name__ == "__main__":
     main()
