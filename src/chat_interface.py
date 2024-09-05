@@ -54,8 +54,6 @@ class ChatInterface:
         return formatted_response
 
     def render(self):
-
-    def render(self):
         if 'current_assistant' not in st.session_state or 'assistants' not in st.session_state:
             st.error("Session state not properly initialized. Please select an assistant first.")
             return
