@@ -4,7 +4,7 @@ from typing import Dict, List
 
 class Database:
     def __init__(self, db_name: str = "usermanpro.db"):
-        self.conn = sqlite3.connect(db_name, check_same_thread=False)
+        self.conn = sqlite3.connect(db_name, check_same_thread=False, timeout=30)
         self.create_tables()
         self.add_created_at_column()
         self.update_created_at_column()
