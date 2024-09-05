@@ -1,4 +1,3 @@
-import pyperclip
 import streamlit as st
 from .groq_client import GroqClient
 from .database import Database
