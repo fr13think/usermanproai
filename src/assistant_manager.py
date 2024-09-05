@@ -37,7 +37,7 @@ class AssistantManager:
         
         new_assistant_prompt = ""  # Initialize with a default value
         
-        if prompt_option == "Custom":
+        if prompt_option == "Custom Prompt":
             new_assistant_prompt = st.sidebar.text_area("Custom Prompt", max_chars=1000)
         else:
             if st.sidebar.button("Generate Prompt"):
