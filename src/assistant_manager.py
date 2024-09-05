@@ -11,6 +11,8 @@ class AssistantManager:
             st.session_state.assistants = self.db.get_all_assistants()
         if "current_assistant" not in st.session_state:
             st.session_state.current_assistant = None
+        if "generated_prompt" not in st.session_state:
+            st.session_state.generated_prompt = ""
 
     def create_assistant(self, name: str, prompt: str):
         if validate_input(name) and validate_input(prompt):
@@ -35,22 +37,19 @@ class AssistantManager:
         new_assistant_name = st.sidebar.text_input("Assistant Name")
         prompt_option = st.sidebar.radio("Create New Prompt :", ["Custom Prompt", "Auto-generate"])
         
-        new_assistant_prompt = ""  # Initialize with a default value
-        
         if prompt_option == "Custom Prompt":
-            new_assistant_prompt = st.sidebar.text_area("Custom Prompt", max_chars=1000)
+            new_assistant_prompt = st.sidebar.text_area("Custom Prompt", value=st.session_state.generated_prompt, max_chars=1000)
         else:
             if st.sidebar.button("Generate Prompt"):
-                new_assistant_prompt = self.auto_generate_prompt()
-                st.sidebar.code(new_assistant_prompt, language="text", wrap_lines=True)
-                
-                # Add a button to copy the generated prompt
-                if st.sidebar.button("Copy to Clipboard"):
-                    self.copy_to_clipboard(new_assistant_prompt)
+                st.session_state.generated_prompt = self.auto_generate_prompt()
+                st.rerun()
+            
+            new_assistant_prompt = st.sidebar.text_area("Generated Prompt", value=st.session_state.generated_prompt, max_chars=1000)
 
         if st.sidebar.button("Create Assistant"):
             if self.create_assistant(new_assistant_name, new_assistant_prompt):
                 st.sidebar.success(f"Assistant '{new_assistant_name}' created!")
+                st.session_state.generated_prompt = ""  # Clear the generated prompt after creating assistant
             else:
                 st.sidebar.error("Invalid input. Please check your assistant name and prompt.")
         
@@ -64,19 +63,3 @@ class AssistantManager:
             if st.sidebar.button("Delete Current Assistant"):
                 self.delete_assistant(st.session_state.current_assistant)
                 st.sidebar.success("Assistant deleted successfully.")
-
-    def copy_to_clipboard(self, text: str):
-        # JavaScript to copy text to clipboard
-        js = f"""
-        <script>
-        function copyToClipboard(text) {{
-            navigator.clipboard.writeText(text).then(function() {{
-                alert('Copied to clipboard!');
-            }}, function(err) {{
-                alert('Could not copy text: ', err);
-            }});
-        }}
-        copyToClipboard({json.dumps(text)});
-        </script>
-        """
-        st.components.v1.html(js, height=0)
