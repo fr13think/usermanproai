@@ -1,3 +1,4 @@
+import pyperclip
 import streamlit as st
 from .groq_client import GroqClient
 from .database import Database
@@ -35,12 +36,14 @@ class AssistantManager:
         new_assistant_name = st.sidebar.text_input("Assistant Name")
         prompt_option = st.sidebar.radio("Prompt Option", ["Custom", "Auto-generate"])
         
+        new_assistant_prompt = ""  # Initialize with a default value
+        
         if prompt_option == "Custom":
-            new_assistant_prompt = st.sidebar.text_area("Custom Prompt")
+            new_assistant_prompt = st.sidebar.text_area("Custom Prompt", max_chars=1000)
         else:
             if st.sidebar.button("Generate Prompt"):
                 new_assistant_prompt = self.auto_generate_prompt()
-                st.sidebar.write(f"Generated Prompt: {new_assistant_prompt}")
+                st.sidebar.code(f"Generated Prompt: {new_assistant_prompt}", wrap_lines=True)
         
         if st.sidebar.button("Create Assistant"):
             if self.create_assistant(new_assistant_name, new_assistant_prompt):
