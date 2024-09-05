@@ -40,6 +40,19 @@ class ChatInterface:
             st.empty()
             # Container for user input
             input_container = st.container()
+            input_container_style = """
+            <style>
+            .stTextInput {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                padding: 1rem;
+                background-color: white;
+                border-top: 1px solid #e6e6e6;
+            }
+            </style>
+            """
+            st.markdown(input_container_style, unsafe_allow_html=True)
             with input_container:
                 user_input = st.chat_input("Type your message here...")
                 if user_input:
