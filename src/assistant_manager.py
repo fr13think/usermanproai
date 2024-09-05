@@ -2,6 +2,8 @@ import streamlit as st
 from .groq_client import GroqClient
 from .database import Database
 from .utils import validate_input
+import plotly.express as px
+import pandas as pd
 
 class AssistantManager:
     def __init__(self, db: Database):
@@ -11,8 +13,6 @@ class AssistantManager:
             st.session_state.assistants = self.db.get_all_assistants()
         if "current_assistant" not in st.session_state:
             st.session_state.current_assistant = None
-        if "generated_prompt" not in st.session_state:
-            st.session_state.generated_prompt = ""
 
     def create_assistant(self, name: str, prompt: str):
         if validate_input(name) and validate_input(prompt):
@@ -35,21 +35,20 @@ class AssistantManager:
     def render_sidebar(self):
         st.sidebar.header("Create New Assistant")
         new_assistant_name = st.sidebar.text_input("Assistant Name")
-        prompt_option = st.sidebar.radio("Create New Prompt :", ["Custom Prompt", "Auto-generate"])
+        prompt_option = st.sidebar.radio("Prompt Option", ["Custom", "Auto-generate"])
         
-        if prompt_option == "Custom Prompt":
-            new_assistant_prompt = st.sidebar.text_area("Custom Prompt", value=st.session_state.generated_prompt, max_chars=1000)
+        new_assistant_prompt = ""  # Initialize with a default value
+        
+        if prompt_option == "Custom":
+            new_assistant_prompt = st.sidebar.text_area("Custom Prompt", max_chars=1000)
         else:
             if st.sidebar.button("Generate Prompt"):
-                st.session_state.generated_prompt = self.auto_generate_prompt()
-                st.rerun()
-            
-            new_assistant_prompt = st.sidebar.text_area("Generated Prompt", value=st.session_state.generated_prompt, max_chars=1000)
-
+                new_assistant_prompt = self.auto_generate_prompt()
+                st.sidebar.code(f"Generated Prompt: {new_assistant_prompt}", wrap_lines=True)
+        
         if st.sidebar.button("Create Assistant"):
             if self.create_assistant(new_assistant_name, new_assistant_prompt):
                 st.sidebar.success(f"Assistant '{new_assistant_name}' created!")
-                st.session_state.generated_prompt = ""  # Clear the generated prompt after creating assistant
             else:
                 st.sidebar.error("Invalid input. Please check your assistant name and prompt.")
         
@@ -59,7 +58,17 @@ class AssistantManager:
                                                   format_func=lambda x: st.session_state.assistants[x]['name'])
         if selected_assistant:
             st.session_state.current_assistant = selected_assistant
+
         if st.session_state.current_assistant:
             if st.sidebar.button("Delete Current Assistant"):
                 self.delete_assistant(st.session_state.current_assistant)
                 st.sidebar.success("Assistant deleted successfully.")
+
+    def render_dashboard(self):
+        data = self.db.get_assistants_created_per_day()
+        df = pd.DataFrame.from_dict(data, orient='index', columns=['count'])
+        df.index.name = 'date'
+        df.reset_index(inplace=True)
+        
+        fig = px.line(df, x='date', y='count', title='Assistants Created per Day')
+        st.plotly_chart(fig)
