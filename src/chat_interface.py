@@ -48,25 +48,16 @@ class ChatInterface:
                     st.write(format_message(message["content"]))
 
         # User input area
-        if 'user_input' not in st.session_state:
-            st.session_state.user_input = ""
-
-        def clear_input():
-            st.session_state.user_input = ""
-
         def send_message():
             if st.session_state.user_input:
+                user_message = st.session_state.user_input
+                st.session_state.user_input = ""  # Clear the input
                 with st.spinner("Thinking..."):
-                    assistant_response = self.chat_with_assistant(st.session_state.user_input)
+                    assistant_response = self.chat_with_assistant(user_message)
                 st.session_state.need_rerun = True
-                clear_input()
 
-        user_input = st.text_input("Type your message here...", key="user_input", on_change=send_message, args=())
-        col1, col2, col3 = st.columns([1, 1, 5])
-        with col1:
-            st.button("Send", on_click=send_message)
-        with col2:
-            st.button("Clear", on_click=clear_input)
+        user_input = st.text_input("Type your message here...", key="user_input", on_change=send_message)
+        st.button("Send", on_click=send_message)
 
         # Clear chat history button
         if st.button("Clear Chat History"):
