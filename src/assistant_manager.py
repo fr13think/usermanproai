@@ -33,7 +33,7 @@ class AssistantManager:
     def render_sidebar(self):
         st.sidebar.header("Create New Assistant")
         new_assistant_name = st.sidebar.text_input("Assistant Name")
-        prompt_option = st.sidebar.radio("Prompt Option", ["Custom", "Auto-generate"])
+        prompt_option = st.sidebar.radio("Create New Prompt :", ["Custom Prompt", "Auto-generate"])
         
         new_assistant_prompt = ""  # Initialize with a default value
         
