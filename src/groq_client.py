@@ -35,7 +35,6 @@ class GroqClient:
         response = self.client.chat.completions.create(
             model="llama3-groq-70b-8192-tool-use-preview",
             messages=messages,
-            max_tokens=500
         )
         return response.choices[0].message.content
 
